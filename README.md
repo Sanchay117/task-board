@@ -182,6 +182,17 @@ Base URL: `http://127.0.0.1:8000`
 -   Unit and integration tests.
 -   Deployment scripts/CI-CD pipeline.
 
+## Deployment
+
+Backend : [here](https://tasks-board.onrender.com/)
+Frontend : [here](https://task-board-weld.vercel.app/)
+
+## Additional Notes
+
+This project was made mostly with the help of LLM's as I have only basic knowledge of react and no knowledge whatsoever of Vite and Tailwind. The coding and debugging was done in under an hour. Deployment however took a bit longer as the inital sites I chose were very problematic (Heroku and pythonanywhere).
+
+Chat Link : [here](https://chatgpt.com/share/682876f7-7b0c-8002-8cd5-3e1279c2c17d)
+
 ## Contributing
 
 Pull requests are welcome. For major changes, please open an issue first to discuss what you would like to change.
