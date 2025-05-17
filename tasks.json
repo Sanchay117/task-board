@@ -1,0 +1,38 @@
+[
+    {
+        "id": "1",
+        "title": "Set up project structure",
+        "description": "Initialize Vite + Tailwind for frontend and FastAPI for backend",
+        "status": "To Do"
+    },
+    {
+        "id": "2",
+        "title": "Build task board UI",
+        "description": "Create columns for To Do, In Progress, and Done",
+        "status": "In Progress"
+    },
+    {
+        "id": "3",
+        "title": "Implement drag-and-drop",
+        "description": "Use react-beautiful-dnd to enable drag/drop across columns",
+        "status": "To Do"
+    },
+    {
+        "id": "4",
+        "title": "Connect to backend API",
+        "description": "Load/save tasks using FastAPI endpoints",
+        "status": "To Do"
+    },
+    {
+        "id": "5",
+        "title": "Allow task editing",
+        "description": "Support editing task title and description",
+        "status": "Done"
+    },
+    {
+        "id": "6",
+        "title": "Persist state on drag",
+        "description": "Send updated status to backend after dragging a task",
+        "status": "In Progress"
+    }
+]
