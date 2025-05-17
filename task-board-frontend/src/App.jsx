@@ -1,7 +1,8 @@
-import { useEffect, useState } from "react";
-import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
+import React, { useEffect, useState } from "react";
+import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd"; // UPDATED IMPORT
 
 const COLUMN_ORDER = ["To Do", "In Progress", "Done"];
+const API_URL = "http://127.0.0.1:8000/api/tasks";
 
 function App() {
     const [tasks, setTasks] = useState([]);
@@ -9,12 +10,13 @@ function App() {
     const [description, setDescription] = useState("");
     const [status, setStatus] = useState("To Do");
 
-    const API_URL = "http://localhost:8000/api/tasks";
-
     useEffect(() => {
         fetch(API_URL)
             .then((res) => res.json())
-            .then((data) => setTasks(data));
+            .then((data) =>
+                setTasks(data.map((task) => ({ ...task, id: String(task.id) })))
+            )
+            .catch((error) => console.error("Error fetching tasks:", error));
     }, []);
 
     const groupedTasks = COLUMN_ORDER.reduce((acc, col) => {
@@ -24,54 +26,115 @@ function App() {
 
     const handleDragEnd = async (result) => {
         const { destination, source, draggableId } = result;
-        if (!destination || destination.droppableId === source.droppableId)
-            return;
 
-        const updatedTasks = tasks.map((task) =>
+        if (
+            !destination ||
+            (destination.droppableId === source.droppableId &&
+                destination.index === source.index)
+        ) {
+            return;
+        }
+
+        const taskToMove = tasks.find((task) => task.id === draggableId);
+        if (!taskToMove) return;
+
+        // Optimistic UI update: change status
+        const newTasksState = tasks.map((task) =>
             task.id === draggableId
                 ? { ...task, status: destination.droppableId }
                 : task
         );
-        setTasks(updatedTasks);
+        setTasks(newTasksState);
 
-        const movedTask = updatedTasks.find((task) => task.id === draggableId);
-        await fetch(`${API_URL}/${movedTask.id}`, {
-            method: "PUT",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(movedTask),
-        });
+        // Update backend
+        try {
+            const movedTaskPayload = {
+                ...taskToMove, // Send the original task data
+                status: destination.droppableId, // with the new status
+            };
+            await fetch(`${API_URL}/${draggableId}`, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(movedTaskPayload),
+            });
+        } catch (error) {
+            console.error("Error updating task status:", error);
+            // Revert UI change if backend update fails
+            setTasks(
+                tasks.map((task) =>
+                    task.id === draggableId ? taskToMove : task
+                )
+            ); // Revert to original task state before drag for the specific task
+        }
     };
 
     const createTask = async () => {
-        const newTask = { id: "", title, description, status };
-        const res = await fetch(API_URL, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(newTask),
-        });
-        const data = await res.json();
-        setTasks((prev) => [...prev, data]);
-        setTitle("");
-        setDescription("");
-        setStatus("To Do");
+        if (!title.trim()) {
+            alert("Title cannot be empty.");
+            return;
+        }
+        const newTaskPayload = { title, description, status };
+        try {
+            const res = await fetch(API_URL, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(newTaskPayload),
+            });
+            if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+            const data = await res.json();
+            setTasks((prev) => [...prev, { ...data, id: String(data.id) }]);
+            setTitle("");
+            setDescription("");
+            setStatus("To Do");
+        } catch (error) {
+            console.error("Error creating task:", error);
+        }
     };
 
     const deleteTask = async (id) => {
-        await fetch(`${API_URL}/${id}`, { method: "DELETE" });
-        setTasks((prev) => prev.filter((task) => task.id !== id));
+        const taskIdStr = String(id);
+        // Optimistic UI update
+        const originalTasks = [...tasks];
+        setTasks((prev) => prev.filter((task) => task.id !== taskIdStr));
+        try {
+            const res = await fetch(`${API_URL}/${taskIdStr}`, {
+                method: "DELETE",
+            });
+            if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+        } catch (error) {
+            console.error("Error deleting task:", error);
+            setTasks(originalTasks); // Revert on error
+        }
     };
 
-    const updateTask = async (id, title, description) => {
-        const updated = tasks.map((t) =>
-            t.id === id ? { ...t, title, description } : t
+    const updateTask = async (id, newTitle, newDescription) => {
+        const taskIdStr = String(id);
+        const taskToUpdate = tasks.find((t) => t.id === taskIdStr);
+        if (!taskToUpdate) return;
+
+        const updatedTaskData = {
+            ...taskToUpdate,
+            title: newTitle,
+            description: newDescription,
+        };
+
+        // Optimistic UI update
+        const originalTasks = [...tasks];
+        setTasks((prevTasks) =>
+            prevTasks.map((t) => (t.id === taskIdStr ? updatedTaskData : t))
         );
-        setTasks(updated);
-        const task = updated.find((t) => t.id === id);
-        await fetch(`${API_URL}/${id}`, {
-            method: "PUT",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(task),
-        });
+
+        try {
+            const res = await fetch(`${API_URL}/${taskIdStr}`, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(updatedTaskData),
+            });
+            if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+        } catch (error) {
+            console.error("Error updating task:", error);
+            setTasks(originalTasks); // Revert on error
+        }
     };
 
     return (
@@ -80,7 +143,6 @@ function App() {
                 Task Management Board
             </h1>
 
-            {/* Task Creator */}
             <div className="bg-white shadow-lg rounded-lg p-6 mb-12 max-w-5xl mx-auto">
                 <h2 className="text-2xl font-semibold mb-4 text-gray-700">
                     Create New Task
@@ -118,21 +180,24 @@ function App() {
                 </div>
             </div>
 
-            {/* Task Columns */}
             <DragDropContext onDragEnd={handleDragEnd}>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     {COLUMN_ORDER.map((column) => (
                         <Droppable droppableId={column} key={column}>
-                            {(provided) => (
+                            {(provided, snapshot) => (
                                 <div
                                     ref={provided.innerRef}
                                     {...provided.droppableProps}
-                                    className="bg-white rounded-xl shadow-md p-5 min-h-[400px] flex flex-col"
+                                    className={`bg-white rounded-xl shadow-md p-5 min-h-[400px] flex flex-col ${
+                                        snapshot.isDraggingOver
+                                            ? "bg-blue-50"
+                                            : ""
+                                    }`}
                                 >
                                     <h2 className="text-xl font-bold text-gray-700 mb-4 text-center border-b pb-2">
                                         {column}
                                     </h2>
-                                    <div className="space-y-4">
+                                    <div className="space-y-4 flex-grow overflow-y-auto">
                                         {groupedTasks[column]?.map(
                                             (task, index) => (
                                                 <Draggable
@@ -140,17 +205,24 @@ function App() {
                                                     draggableId={task.id}
                                                     index={index}
                                                 >
-                                                    {(provided) => (
+                                                    {(
+                                                        providedDraggable, // Renamed to avoid conflict with outer provided
+                                                        snapshotDraggable // Renamed
+                                                    ) => (
                                                         <div
                                                             ref={
-                                                                provided.innerRef
+                                                                providedDraggable.innerRef
                                                             }
-                                                            {...provided.draggableProps}
-                                                            {...provided.dragHandleProps}
-                                                            className="bg-gray-100 p-4 rounded-lg shadow hover:shadow-md transition relative"
+                                                            {...providedDraggable.draggableProps}
+                                                            {...providedDraggable.dragHandleProps}
+                                                            className={`bg-gray-100 p-4 rounded-lg shadow hover:shadow-md transition relative ${
+                                                                snapshotDraggable.isDragging
+                                                                    ? "opacity-80 shadow-xl"
+                                                                    : ""
+                                                            }`}
                                                         >
                                                             <input
-                                                                className="font-semibold text-gray-800 text-lg bg-transparent w-full mb-1 focus:outline-none"
+                                                                className="font-semibold text-gray-800 text-lg bg-transparent w-full mb-1 focus:outline-none focus:ring-1 focus:ring-blue-300 rounded px-1"
                                                                 value={
                                                                     task.title
                                                                 }
@@ -164,10 +236,16 @@ function App() {
                                                                 }
                                                             />
                                                             <textarea
-                                                                className="text-sm text-gray-600 bg-transparent w-full resize-none focus:outline-none"
+                                                                className="text-sm text-gray-600 bg-transparent w-full resize-none focus:outline-none focus:ring-1 focus:ring-blue-300 rounded px-1"
                                                                 value={
                                                                     task.description
                                                                 }
+                                                                rows={Math.max(
+                                                                    1,
+                                                                    task.description.split(
+                                                                        "\n"
+                                                                    ).length
+                                                                )}
                                                                 onChange={(e) =>
                                                                     updateTask(
                                                                         task.id,
@@ -183,7 +261,8 @@ function App() {
                                                                         task.id
                                                                     )
                                                                 }
-                                                                className="absolute top-2 right-2 text-red-500 hover:text-red-700 text-xl"
+                                                                className="absolute top-2 right-2 text-red-500 hover:text-red-700 text-xl p-1 leading-none"
+                                                                aria-label="Delete task"
                                                             >
                                                                 ✕
                                                             </button>
@@ -192,17 +271,14 @@ function App() {
                                                 </Draggable>
                                             )
                                         )}
+                                        {provided.placeholder}
                                     </div>
-                                    {provided.placeholder}
                                 </div>
                             )}
                         </Droppable>
                     ))}
                 </div>
             </DragDropContext>
-            <div className="bg-green-500 text-white p-4 text-center">
-                Tailwind is working!
-            </div>
         </div>
     );
 }
