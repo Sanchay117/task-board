@@ -34,5 +34,11 @@
         "title": "Persist state on drag",
         "description": "Send updated status to backend after dragging a task",
         "status": "In Progress"
+    },
+    {
+        "id": "ed215f70-0af2-4f87-baab-f469c7c8c104",
+        "title": "data permanence",
+        "description": "data should persist after shutdown",
+        "status": "Done"
     }
 ]

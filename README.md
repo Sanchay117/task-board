@@ -29,32 +29,32 @@ A full-stack Kanban-style task management application with a FastAPI backend and
 -   **Tailwind CSS:** A utility-first CSS framework for rapid UI development.
 -   **Vite:** Next-generation frontend tooling for fast development and optimized builds.
 -   **JavaScript (ES6+)**
--   **Node.js & npm/yarn**
+-   **Node.js & npm**
 
 ## Project Structure
 
-.
-├── task-board-frontend/ # React Frontend Application
-│ ├── public/
-│ ├── src/
-│ │ ├── App.jsx # Main application component
-│ │ ├── main.jsx # React entry point
-│ │ └── index.css # Global styles (Tailwind imports)
-│ ├── index.html
-│ ├── package.json
-│ └── vite.config.js
-│
-├── main.py # FastAPI backend application
-├── tasks.json # Data store for tasks
-├── requirements.txt # Python backend dependencies
-└── README.md # This file
+.</br>
+├── task-board-frontend/ # React Frontend Application</br>
+│ ├── public/</br>
+│ ├── src/</br>
+│ │ ├── App.jsx # Main application component</br>
+│ │ ├── main.jsx # React entry point</br>
+│ │ └── index.css # Global styles (Tailwind imports)</br>
+│ ├── index.html</br>
+│ ├── package.json</br>
+│ └── vite.config.js</br>
+│</br>
+├── main.py # FastAPI backend application</br>
+├── tasks.json # Data store for tasks</br>
+├── requirements.txt # Python backend dependencies</br>
+└── README.md # This file</br>
 
 ## Prerequisites
 
 -   **Python:** Version 3.7+
 -   **Pip:** Python package installer
 -   **Node.js:** Version 16.x or higher
--   **npm** or **yarn:** Node package manager
+-   **npm:** Node package manager
 
 ## Setup and Running
 
@@ -80,7 +80,6 @@ Navigate to the **root directory** of the project.
     ```
     fastapi
     uvicorn[standard]
-    python-multipart # often needed by FastAPI for forms, good to have
     ```
 
     Then run:

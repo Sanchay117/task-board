@@ -82,11 +82,10 @@ def delete_task(task_id: str):
     deleted_task = task_map.pop(task_id)
     return deleted_task.dict() # Return the dict of the deleted task
 
-# Optional: A function to save tasks back to tasks.json (e.g., on shutdown or periodically)
-# def save_tasks_to_json():
-#     with open("tasks.json", "w") as f:
-#         json.dump([task.dict() for task in task_map.values()], f, indent=4)
+def save_tasks_to_json():
+    with open("tasks.json", "w") as f:
+        json.dump([task.dict() for task in task_map.values()], f, indent=4)
 
-# @app.on_event("shutdown")
-# def shutdown_event():
-#     save_tasks_to_json()
+@app.on_event("shutdown")
+def shutdown_event():
+    save_tasks_to_json()
