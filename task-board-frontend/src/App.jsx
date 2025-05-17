@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd"; // UPDATED IMPORT
 
 const COLUMN_ORDER = ["To Do", "In Progress", "Done"];
-const API_URL = "http://127.0.0.1:8000/api/tasks";
+const API_URL = "https://tasks-board.onrender.com/api/tasks";
 
 function App() {
     const [tasks, setTasks] = useState([]);
