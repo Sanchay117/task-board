@@ -185,7 +185,7 @@ Base URL: `http://127.0.0.1:8000`
 ## Deployment
 
 Backend : [here](https://tasks-board.onrender.com/)</br>
-Frontend : [here](https://task-board-weld.vercel.app/)
+Frontend : [here](https://task-board-weld.vercel.app/) (The data might take a minute to load)
 
 ## Additional Notes
 
